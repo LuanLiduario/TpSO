@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <math.h>
-#define TAMANHOTABELAPCB = 100;
+#define TAMANHOTABELAPCB 100;
 
 typedef struct {
 	int valor;
@@ -18,7 +18,7 @@ typedef struct{
     int cont_programa;
     int valor_inteiro;
     int tempo_processo;
-    int tempo_atual;
+    int tempo_atual;// verificar 
     Instrucao *programa;
 }CPU;
 //TabelaPcb é um array com uma entrada para cada processo que ainda não terminou sua execução.
@@ -33,11 +33,20 @@ typedef struct{
     Instrucao *programa;
 }TabelaPcb;
 
-TabelaPcb tabelaPcb[TAMANHOTABELAPCB];// arrumar
+typedef struct ListaTabelaPcb{
+    int indice;
+    TabelaPcb tabelaPcb;
+    struct ListaTabelaPcb *prox;
+    struct ListaTabelaPcb *anterior;
+} ListaTabelaPcb;
+
+ListaTabelaPcb *tabelaPcb = NULL;
+
+//TabelaPcb tabelaPcb[100];// arrumar
 int nProcessos = 0;
 //Fila para estados
 typedef struct fila{
-	int indice;
+    ListaTabelaPcb *referenceTabelaPcb;
 	struct fila *prox;
 } fila;
 
@@ -46,10 +55,13 @@ fila *estado_pronto = NULL;
 //Estado Bloqueado 
 fila *estado_bloqueado = NULL;
 //Estado Executando 
-int estado_executando = 0;//N
+ListaTabelaPcb *estado_executando = NULL;//N
 
-void imprimaCpu(CPU cpu,int n);
+void imprimaCpu(Instrucao *intrucao);
 
 Instrucao* lerArq(char * filename);
 
+void addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor);
+
+void printTabelaPCB();
 
