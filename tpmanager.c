@@ -10,27 +10,22 @@ int main() {//PM
     cpu.tempo_processo = 0;
     cpu.tempo_atual = 0;
     cpu.programa = programa;
-    addTabelaPCB(programa,0,0,0);
-    programa = lerArq("file_a");
-    cpu.programa = programa;
-    addTabelaPCB(programa,1,0,0);
-    programa = lerArq("file_b");
-    cpu.programa = programa;
-    addTabelaPCB(programa,2,0,0);
-    printTabelaPCB();
-    printf("----------------------\n");
-    estado_executando = tabelaPcb;
-    estado_executando = estado_executando->prox->prox;
-    terminarProcessoSimulado();
+    estado_executando = addTabelaPCB(programa,0,0,0);
     printTabelaPCB();
 	do {
 		scanf("%c", &string);
 		//Comandos
 		switch(string){
 			case 'Q': // Fim de uma unidade de tempo
-					// cpu = processoSimulado(cpu);
-					// tempo++;
-					printf("Q\n");
+					if (estado_executando != NULL)
+					{
+						cpu = processoSimulado(cpu);
+					}else
+					{
+						printf("SEM PROCESSOS\n");
+					}
+					tempo++;
+					//printf("Q\n");
 				break;
 			case 'U': // Desbloqueie o primeiro processo simulado que esta na fila de bloqueados
 					// desbloquerProcesso();
@@ -52,7 +47,7 @@ int main() {//PM
 
 }
 
-void addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor){
+ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor){
 	TabelaPcb processo;
 	processo.id_processo = id;
     processo.id_processo_pai = id_pai;
@@ -68,7 +63,8 @@ void addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor){
 		tabelaPcb->indice = indice;
 		tabelaPcb->tabelaPcb = processo;
 		tabelaPcb->prox = NULL;
-		tabelaPcb->anterior = NULL;
+		tabelaPcb->anterior = NULL; 
+		return tabelaPcb; 
 	}else{
 		ListaTabelaPcb *aux = NULL;
 		aux = tabelaPcb;
@@ -80,8 +76,10 @@ void addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor){
 		aux->prox->tabelaPcb = processo;
 		aux->prox->prox = NULL;
 		aux->prox->anterior = aux;
+		return aux->prox;
 	}
     nProcessos ++;
+
 }
 
 void terminarProcessoSimulado(){
@@ -110,10 +108,11 @@ void terminarProcessoSimulado(){
 }
 
 void printTabelaPCB(){
+	printf("___________________________\n");
 	ListaTabelaPcb *aux = NULL;
 	aux = tabelaPcb;
 	while(aux != NULL){
-		printf("PROCESSO :\n");
+		printf("\n\nPROCESSO :\n");
 		printf("indice %d:\n",aux->indice);
 		printf("ID : %d\n",aux->tabelaPcb.id_processo);
 		printf("ID PAI: %d\n",aux->tabelaPcb.id_processo_pai);
@@ -121,44 +120,59 @@ void printTabelaPCB(){
 		imprimaCpu(aux->tabelaPcb.programa);
 		aux = aux->prox;
 	}
+	printf("___________________________\n");
 }
 
 Instrucao* lerArq(char * filename){
 	FILE *arq = fopen(filename, "r");
+	printf("%s\n",filename);
     if(arq == NULL){ 
         printf("\nERRO NA ABERTURA DO ARQUIVO\n\n\n");
         exit(1);
-        return;
     };
 
     int nintrucoes = 1;
     char comando;
     char *string;
     string = (char*) malloc(sizeof(char)*50);
+    char *valor;
+    valor = (char*) malloc(sizeof(char)*50);
  	Instrucao instrucao;
     Instrucao *programa = (Instrucao*)malloc(sizeof(Instrucao)*100);
-
+    int i;
     while(!feof(arq)){//percorre o arquivo
-    	 fscanf(arq ,"%c %s\n",&comando,string);
-    	// printf(" Intrucao %d = %c %s\n",nintrucoes,comando,string );
-    	 instrucao.instrucao = comando;
-    	 if(comando == 'R'){
-    	 	instrucao.filename = (char*) malloc(sizeof(char)*50);
-    	 	instrucao.filename = string;
-    	 }else if(comando != 'E' && comando != 'B'){
-    	 	instrucao.valor = atoi(string);
+    	 fgets(string,50,arq);
+    	 instrucao.instrucao = string[0];
+    	 if(instrucao.instrucao != 'B' && instrucao.instrucao != 'E'){
+			i = 2; 
+			while(string[i] != '\n'){
+				valor[i-2] = string[i];
+				i++;
+			}
+			valor[i-3]='\0';
+			//printf("%s",valor);
+			if(instrucao.instrucao == 'R'){
+				instrucao.filename = (char*) malloc(sizeof(char)*50);
+				strcpy (instrucao.filename, valor);
+				//printf(" Intrucao %d = %c %s\n",nintrucoes,instrucao.instrucao,instrucao.filename );
+			}else{
+				instrucao.valor = atoi(valor);
+				//printf(" Intrucao %d = %c %d\n",nintrucoes,instrucao.instrucao,instrucao.valor );
+			}
     	 }
-    
+    	
     	 programa[nintrucoes-1] = instrucao;
     	 nintrucoes++;
     	 //cpu.instrucoes = realloc(cpu.instrucoes,sizeof(Programa)*nintrucoes);
     }
-
+    imprimaCpu(programa);
+    getchar();
     fclose(arq);
    
     return programa;
    //imprimaCpu(cpu,nintrucoes);
 }
+
 
 void imprimaCpu(Instrucao *programa){
 
@@ -166,16 +180,16 @@ void imprimaCpu(Instrucao *programa){
 	int i = 0;
 	while (1)
 	{
-		printf("Intrucao: %c  ",programa[i].instrucao);
+		printf(" Instrucao :%c  ",programa[i].instrucao);
 		switch(programa[i].instrucao){
 		case 'S': // n: Atualiza o valor da variavel inteira para n.
-			printf("Valor : %d \n",programa[i].valor);
+			printf(": %d \n",programa[i].valor);
 			break;
 		case 'A': // n: Soma n na variavel inteira.
-			printf("Valor : %d \n",programa[i].valor);
+			printf(": %d \n",programa[i].valor);
 			break;
 		case 'D':// D n: Subtrai n na variavel inteira.
-			printf("Valor : %d \n",programa[i].valor);
+			printf(": %d \n",programa[i].valor);
 			break;
 		case 'B': // B: Bloqueia o processo simulado.
 			printf("B\n");
@@ -186,67 +200,105 @@ void imprimaCpu(Instrucao *programa){
 			break;
 		case 'F': //n: Cria um novo processo simulado. O novo processo uma copia exata do pai. O novo processo executa
 		//da instução imediatamente apos a instução F, enquanto o pai continua n instrucões apos F
-			printf("Valor : %d \n",programa[i].valor);
+			printf(": %d \n",programa[i].valor);
 			break;
 		case 'R':// R nome do arquivo: Substitui o programa do processo simulado com o programa no arquivo nome do
 		// arquivo, e atualiza o valor do contador de programa para a primeira instrução do novo programa.
-			printf("Arquivo : %s \n",programa[i].filename);
+			printf(": %s\n",programa[i].filename);
 			break;
 		default:
+			printf("ERRO\n");
 			break;
 		}
 		i++;
 	}
 }
 
-// CPU processoSimulado(CPU cpu)
-// {
-// //Processo Simulado
-
-// 	cpu.tempo_atual++;
-// 	switch(cpu.programa[cpu.cont_programa].instrucao){
-// 		case 'S': // n: Atualiza o valor da variavel inteira para n.
-// 			cpu.programa.valor_inteiro = cpu.programa[cpu.cont_programa].valor;
-// 			cpu.cont_programa++;
-// 			break;
-// 		case 'A': // n: Soma n na variavel inteira.
-// 			cpu.programa.valor_inteiro = cpu.programa.valor_inteiro + cpu.programa[cpu.cont_programa].valor ;
-// 			cpu.cont_programa++;
-// 			break;
-// 		case 'D':// D n: Subtrai n na variavel inteira.
-// 			cpu.programa.valor_inteiro = cpu.programa.valor_inteiro - cpu.programa[cpu.cont_programa].valor ;
-// 			cpu.cont_programa++;
-// 			break;
-// 		case 'B': // B: Bloqueia o processo simulado.
-// 			// bloquearProcessoSimulado(cpu);
-// 			cpu.cont_programa++;
-// 			break;
-// 		case 'E': // Termina o processo simulado.
-// 			// terminarProcessoSimulado();
-// 			break;
-// 		case 'F': //n: Cria um novo processo simulado. O novo processo uma copia exata do pai. O novo processo executa
-// 		//da instução imediatamente apos a instução F, enquanto o pai continua n instrucões apos F
-// 			Instrucao *programa;
-// 			addTabelaPCB(cpu.programa,nProcessos,cpu.id_processo,cpu.valor_inteiro);
-// 			cpu.cont_programa++;
-// 			if(cpu.programa[cpu.cont_programa].instrucao == 'R'){
-// 				cpu.cont_programa++;
-// 			}
-// 			break;
-// 		case 'R':// R nome do arquivo: Substitui o programa do processo simulado com o programa no arquivo nome do
-// 		// arquivo, e atualiza o valor do contador de programa para a primeira instrução do novo programa.
-// 			programa = lerArq(cpu.programa[cpu.cont_programa].filename);
-// 			cpu.programa = programa;
-// 			cpu.cont_programa = 0;
-// 			break;
-// 		default:
-// 			printf("ERRO INSTRUCAO NAO RECONHECIDA\n");
-// 			//exit(1);
-// 			break;
-// 	}
+CPU processoSimulado(CPU cpu)
+{
+//Processo Simulado
+	printf("TO NO Q com instrucao %c \n",cpu.programa[cpu.cont_programa].instrucao);
+	cpu.tempo_atual++;
+	switch(cpu.programa[cpu.cont_programa].instrucao){
+		case 'S': // n: Atualiza o valor da variavel inteira para n.
+			cpu.valor_inteiro = cpu.programa[cpu.cont_programa].valor;
+			cpu.cont_programa++;
+			break;
+		case 'A': // n: Soma n na variavel inteira.
+			cpu.valor_inteiro = cpu.valor_inteiro + cpu.programa[cpu.cont_programa].valor ;
+			cpu.cont_programa++;
+			break;
+		case 'D':// D n: Subtrai n na variavel inteira.
+			cpu.valor_inteiro = cpu.valor_inteiro - cpu.programa[cpu.cont_programa].valor ;
+			cpu.cont_programa++;
+			break;
+		case 'B': // B: Bloqueia o processo simulado.
+			// bloquearProcessoSimulado(cpu);
+			cpu.cont_programa++;
+			break;
+		case 'E': // Termina o processo simulado.
+			terminarProcessoSimulado();
+			break;
+		case 'F': //n: Cria um novo processo simulado. O novo processo uma copia exata do pai. O novo processo executa
+		//da instução imediatamente apos a instução F, enquanto o pai continua n instrucões apos F
+			printf("TO NO F\n");
+			ListaTabelaPcb *aux;
+			aux = addTabelaPCB(cpu.programa,nProcessos,estado_executando->tabelaPcb.id_processo,cpu.valor_inteiro);
+			addFila(estado_pronto,aux);
+			cpu.cont_programa++;
+			if(cpu.programa[cpu.cont_programa].instrucao == 'R'){
+				cpu.cont_programa++;
+			}
+			break;
+		case 'R':// R nome do arquivo: Substitui o programa do processo simulado com o programa no arquivo nome do
+		// arquivo, e atualiza o valor do contador de programa para a primeira instrução do novo programa.
+			printf("TO NO R\n");
+			cpu.programa = lerArq(cpu.programa[cpu.cont_programa].filename);
+			cpu.cont_programa = 0;
+			estado_executando->tabelaPcb.programa = cpu.programa;
+			printTabelaPCB();
+			break;
+		default:
+			printf("ERRO INSTRUCAO NAO RECONHECIDA\n");
+			//exit(1);
+			break;
+	}
 	
-// 	return cpu;
-// }
+	return cpu;
+}
+
+void addFila(Fila *fila,ListaTabelaPcb *processo){
+	if(fila == NULL){
+		fila = (Fila*) malloc(sizeof(Fila));
+		fila->referenceTabelaPcb = processo;
+		fila->prox = NULL;
+	}else{
+		Fila *aux = fila;
+		while(aux->prox != NULL){// sempre inserir no FIM
+			aux = aux->prox;
+		}
+		aux->prox = (Fila*) malloc(sizeof(Fila));
+		aux->prox->prox = NULL;
+	}
+}
+
+void retirarFila(Fila *fila){
+	if(fila == NULL){
+		printf("FILA VAZIA\n");
+	}else if(fila->prox == NULL){
+		free(fila);
+		fila = NULL;
+	}else{
+		Fila *aux = fila;
+		fila = fila->prox;
+		free(aux);
+	}
+}
+
+void printFILA(Fila *fila){
+	printf("FUNCAO TESTE\n");
+}
+
 
 // void bloquearProcessoSimulado(cpu){
 // 	tabelaPcb[executando].estado = 2;
