@@ -1,7 +1,6 @@
-S 20
-F 1
-R teste
-F 1
-R teste_2
+S 1000
+A 100
 B
+D 15
+A 75
 E

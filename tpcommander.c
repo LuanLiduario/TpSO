@@ -9,19 +9,15 @@
 int main() {
     int writepipe[2] = {-1, -1};
     pid_t childpid;
-
     if(pipe(writepipe) < 0) {
         perror("pipe");
         exit(1);
     }
-
     if((childpid = fork()) == -1) {
         perror("fork");
     }
-
     if(childpid == 0) {
         close(writepipe[1]);
-
         dup2(writepipe[0], STDIN_FILENO);
         close(writepipe[0]);
         execlp("./manager", "./manager", NULL);
@@ -30,7 +26,7 @@ int main() {
         close(writepipe[0]);
         char string;
         while(string != 'T'){
-         // printf("commander\n");
+        //  printf("commander\n");
           scanf("%c", &string);
           write(writepipe[1], &string, 1);
           sleep(1);

@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <math.h>
-#define TAMANHOTABELAPCB 100;
+#include <string.h>
+#define quantum 5
 
 typedef struct {
 	int valor;
@@ -12,7 +13,7 @@ typedef struct {
 	char instrucao;
 }Instrucao;
 // Tempo é um inteiro inicializado com 0
-int tempo = 0;
+int TEMPO = 0;
 //CPU é usado para simular a execução de um processo simulado que está no estado executando
 typedef struct{
     int cont_programa;
@@ -48,20 +49,35 @@ int nProcessos = 0;
 typedef struct fila{
     ListaTabelaPcb *referenceTabelaPcb;
 	struct fila *prox;
-} fila;
+} Fila;
 
 //Estado Pronto 
-fila *estado_pronto = NULL;
+Fila *estado_pronto = NULL;
 //Estado Bloqueado 
-fila *estado_bloqueado = NULL;
+Fila *estado_bloqueado = NULL;
 //Estado Executando 
 ListaTabelaPcb *estado_executando = NULL;//N
 
-void imprimaCpu(Instrucao *intrucao);
-
 Instrucao* lerArq(char * filename);
 
-void addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor);
+ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont);
 
+CPU processoSimulado(CPU cpu);
+
+Fila* addFila(Fila *fila,ListaTabelaPcb *processo);
+Fila* retirarFila(Fila *fila);
+
+void bloquearProcessoSimulado();
+void desbloquerProcesso();
+CPU trocaContexto(CPU cpu);
+
+// void processoReporter();
+
+//Funcoes testes
+void printFILA(Fila *fila);
 void printTabelaPCB();
-
+void imprimaCpu(Instrucao *intrucao);
+void imprimirLinha();
+//
+CPU escalonar();
+void processoReporter();
