@@ -23,11 +23,11 @@ int main() {
         execlp("./manager", "./manager", NULL);
 
     } else {
-        close(writepipe[0]);
         char string;
         while(string != 'T'){
         //  printf("commander\n");
           scanf("%c", &string);
+          close(writepipe[0]);
           write(writepipe[1], &string, 1);
           sleep(1);
         }

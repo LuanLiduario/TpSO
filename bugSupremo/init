@@ -1,0 +1,10 @@
+S 1000
+A 10
+A 50
+D 7
+A 20
+F 1
+R file_a
+F 1
+R file_b
+E

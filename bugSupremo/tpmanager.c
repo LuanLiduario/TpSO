@@ -10,9 +10,6 @@ int main() {//PM
     cpu.tempo_processo = 0;
     cpu.tempo_atual = 0;
     cpu.programa = lerArq("init",&cpu.nintrucoes);
-    estado_executando = (ListaTabelaPcb*) malloc(sizeof(ListaTabelaPcb));
-    estado_executando->prox = NULL;
-    estado_executando->anterior = NULL;
     estado_executando = addTabelaPCB(cpu.programa,0,0,0,0,cpu.nintrucoes);
 	do {
 		scanf("%c", &comando);
@@ -48,7 +45,7 @@ int main() {//PM
 				    	estado_executando->tabelaPcb.programa = cpu.programa;
 				    	estado_executando->tabelaPcb.prioridade = (int)(cpu.nintrucoes/quantum);
 					}
-					reporter();
+					processoReporter();
 				break;
 			case 'T': // Imprima o tempo de retorno medio e finaliza o simulador
 					if(estado_executando != NULL){
@@ -58,7 +55,7 @@ int main() {//PM
 				    	estado_executando->tabelaPcb.programa = cpu.programa;
 				    	estado_executando->tabelaPcb.prioridade = (int)(cpu.nintrucoes/quantum);
 					}
-					reporter();
+					processoReporter();
 				break;
 			default:
 				break;
@@ -68,7 +65,6 @@ int main() {//PM
 }
 
 ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont, int nintrucoes){
-	// atribui os dados a uma variavel ques será salva na lista
 	TabelaPcb processo;
 	processo.id_processo = id;
     processo.id_processo_pai = id_pai;
@@ -80,11 +76,11 @@ ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,i
 	processo.nintrucoes = nintrucoes;
 	processo.prioridade = (int)(nintrucoes/quantum);
 	processo.programa = programa;
-	//int indice = nProcessos;////tirar o indice
+	int indice = nProcessos;////tirar o indice
 	nProcessos ++;
 	if(tabelaPcb == NULL){// tabela está vazia
 		tabelaPcb = (ListaTabelaPcb*) malloc(sizeof(ListaTabelaPcb));
-		//tabelaPcb->indice = indice;
+		tabelaPcb->indice = indice;
 		tabelaPcb->tabelaPcb = processo;
 		tabelaPcb->prox = NULL;
 		tabelaPcb->anterior = NULL; 
@@ -96,7 +92,7 @@ ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,i
 			aux = aux->prox;
 		}
 		aux->prox = (ListaTabelaPcb*) malloc(sizeof(ListaTabelaPcb));
-		//aux->prox->indice = indice;
+		aux->prox->indice = indice;
 		aux->prox->tabelaPcb = processo;
 		aux->prox->prox = NULL;
 		aux->prox->anterior = aux;
@@ -380,133 +376,36 @@ CPU escalonar(CPU cpu){
 	return cpu;
 }
 
-char * converterInt (char * string ,int n)
-{
-    int i =0, c,j;
-    while (n > 0) {
-        c = n % 10;
-        string[i] = c + '0';
-        n /= 10;
-        i++;
-    }
-   j = strlen(string) - 1;
-   i = 0;
-   char aux;
-   while (i < j) {
-      aux = string[i];
-      string[i] = string[j];
-      string[j] = aux;
-      i++;
-      j--;
-   }
-    return string;
-}
+// void reporter(){
+// 	int writepipe[2] = {-1, -1};
+//     pid_t childpid;
+//     if(pipe(writepipe) < 0) {
+//         perror("pipe");
+//         exit(1);
+//     }
+//     if((childpid = fork()) == -1) {
+//         perror("fork");
+//     }
+//     if(childpid == 0) {
+//         close(writepipe[1]);
+//         dup2(writepipe[0], STDIN_FILENO);
+//         close(writepipe[0]);
+//         execlp("./reporter", "./reporter", NULL);
 
-void reporter(){
-	int writepipeReporter[2] = {-1, -1};
-    pid_t id_filho;
-    if(pipe(writepipeReporter) < 0) {
-    	printf("ERRO NO PIPE NO REPORTER\n");
-        perror("pipe");
-        exit(1);
-    }
-    if((id_filho = fork()) == -1) {
-    	printf("ERRO NO REPORTER\n");
-        perror("fork");
-    }
-    if(id_filho == 0) {
-        close(writepipeReporter[1]);
-        dup2(writepipeReporter[0], STDIN_FILENO);
-        close(writepipeReporter[0]);
-        execlp("./reporter", "./reporter", NULL);
+//     } else {
+//         close(writepipe[0]);
+//         char string;
+//         while(string != 'T'){
+//         //  printf("commander\n");
+//           scanf("%c", &string);
+//           write(writepipe[1], &string, 1);
+//           sleep(1);
+//         }
+//     }
 
-    } else {
-        char comando;
-        Fila *aux = NULL;
-		TabelaPcb processo;
-       	//TEMPO:
-       	//comando = 'T';
-        close (writepipeReporter[0]);
-        write (writepipeReporter[1],&TEMPO,sizeof(int));// variavel TEMPO
-        //EXECUTANDO:
-        comando = 'E';
-        write(writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR EXECUTANDO
-        if(estado_executando == NULL){
-        	comando = 'V';
-        	write(writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR SEM PROCESSO
-        }else{
-	        //ATRIBUTOS DO PROCESSO EXECUTANDO
-	      //  printTabelaPCB();
-	        comando = 'S';
-	        write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
-	        sleep(1);//ver dps
-	        write(writepipeReporter[1], &estado_executando->tabelaPcb.id_processo,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.id_processo_pai,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.prioridade,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.valor_inteiro,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.tempo_inicio,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.tempo_cpu_utilizada,sizeof(int));
-		}
-        comando = 'B';
-        write (writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR BLOQUEADO
-        if(estado_bloqueado == NULL){
-        	comando = 'V';
-        	write (writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR SEM PROCESSO
-        }else{
-        	aux = estado_bloqueado;
-			while(aux != NULL){// PERCORRER FILA DE BLOQUEADOS
-				processo = aux->referenceTabelaPcb->tabelaPcb;
-				//ATRIBUTOS DO PROCESSO BLOQUEADO
-				comando = 'S';
-	        	write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
-			 	write (writepipeReporter[1], &processo.id_processo,sizeof(int));
-				write (writepipeReporter[1], &processo.id_processo_pai,sizeof(int));
- 				write (writepipeReporter[1], &processo.prioridade,sizeof(int));
-				write (writepipeReporter[1], &processo.valor_inteiro,sizeof(int));
- 				write (writepipeReporter[1], &processo.tempo_inicio,sizeof(int));
- 				write (writepipeReporter[1], &processo.tempo_cpu_utilizada,sizeof(int));
-				aux = aux->prox;
-			}
-        }
-       
-        //PRONTOS:
-        comando = 'P';
-        close (writepipeReporter[0]);
-        write (writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR PRONTO
-        if(estado_pronto == NULL){
-        	comando = 'V';
-       		close (writepipeReporter[0]);
-        	write (writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR SEM PROCESSO
-        }else{
-        	aux = estado_pronto;
-			while(aux != NULL){// PERCORRER FILA DE PRONTO
-				processo = aux->referenceTabelaPcb->tabelaPcb;
-				//ATRIBUTOS DO PROCESSO BLOQUEADO
-				comando = 'S';
-	        	close (writepipeReporter[0]);
-	        	write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
-	       		close (writepipeReporter[0]);
-			 	write (writepipeReporter[1], &processo.id_processo,sizeof(int));
-			 	close (writepipeReporter[0]);
-				write (writepipeReporter[1], &processo.id_processo_pai,sizeof(int));
-				close (writepipeReporter[0]);
- 				write (writepipeReporter[1], &processo.prioridade,sizeof(int));
- 				close (writepipeReporter[0]);
-				write (writepipeReporter[1], &processo.valor_inteiro,sizeof(int));
-				close (writepipeReporter[0]);
- 				write (writepipeReporter[1], &processo.tempo_inicio,sizeof(int));
- 				close (writepipeReporter[0]);
- 				write (writepipeReporter[1], &processo.tempo_cpu_utilizada,sizeof(int));
-				aux = aux->prox;
-			}
-        }
-        //FINALIZAR:
-        comando = 'F';
-        close (writepipeReporter[0]);
-        write (writepipeReporter[1], &comando, 1);
-    }
-    wait(0);
-}
+//     wait(0);
+// }
+
 
 void processoReporter()
 {
@@ -613,7 +512,7 @@ void printTabelaPCB(){
 	aux = tabelaPcb;
 	while(aux != NULL){
 		printf("\n\nPROCESSO :\n");
-		//printf("indice %d:\n",aux->indice);
+		printf("indice %d:\n",aux->indice);
 		printf("ID : %d\n",aux->tabelaPcb.id_processo);
 		printf("ID PAI: %d\n",aux->tabelaPcb.id_processo_pai);
 		printf("ESTADO : %d\n",aux->tabelaPcb.estado);

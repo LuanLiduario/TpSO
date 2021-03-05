@@ -5,37 +5,43 @@
 #include <sys/wait.h>
 #include <math.h>
 #include <string.h>
+#define prioridadeMAX 10
+#define prioridadeMIN 1
 #define quantum 5
+#define TamanhoString 50
 
 typedef struct {
-	int valor;
+	int valor;// trocar nome
 	char *filename;
 	char instrucao;
 }Instrucao;
 // Tempo é um inteiro inicializado com 0
 int TEMPO = 0;
+int TEMPOMEDIO = 0;
 //CPU é usado para simular a execução de um processo simulado que está no estado executando
 typedef struct{
     int cont_programa;
     int valor_inteiro;
     int tempo_processo;
-    int tempo_atual;// verificar 
+    int tempo_atual;
+    int nintrucoes;//trocar nome
     Instrucao *programa;
 }CPU;
 //TabelaPcb é um array com uma entrada para cada processo que ainda não terminou sua execução.
 typedef struct{
+    int prioridade;
+    int nintrucoes;//trocar nome
 	int id_processo_pai;
 	int id_processo;
 	int cont_programa;////// contrario
     int valor_inteiro;
-    int estado; // 1 : executando, 2 : bloqueado, 3 : pronto
+    int estado; // 1 : executando, 2 : bloqueado, 3 : pronto // verificar 
     int tempo_inicio;
     int tempo_cpu_utilizada;
     Instrucao *programa;
 }TabelaPcb;
 
 typedef struct ListaTabelaPcb{
-    int indice;
     TabelaPcb tabelaPcb;
     struct ListaTabelaPcb *prox;
     struct ListaTabelaPcb *anterior;
@@ -44,7 +50,7 @@ typedef struct ListaTabelaPcb{
 ListaTabelaPcb *tabelaPcb = NULL;
 
 //TabelaPcb tabelaPcb[100];// arrumar
-int nProcessos = 0;
+int nProcessos = 0;// trocar nome
 //Fila para estados
 typedef struct fila{
     ListaTabelaPcb *referenceTabelaPcb;
@@ -52,15 +58,16 @@ typedef struct fila{
 } Fila;
 
 //Estado Pronto 
-Fila *estado_pronto = NULL;
+Fila *estado_pronto = NULL;//trocar nome
 //Estado Bloqueado 
-Fila *estado_bloqueado = NULL;
+Fila *estado_bloqueado = NULL;//trocar nome
 //Estado Executando 
 ListaTabelaPcb *estado_executando = NULL;//N
 
-Instrucao* lerArq(char * filename);
+Instrucao* lerArq(char * filename,int *nintrucoes);
+ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont, int nintrucoes);
 
-ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont);
+// ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont);
 
 CPU processoSimulado(CPU cpu);
 
@@ -81,3 +88,6 @@ void imprimirLinha();
 //
 CPU escalonar();
 void processoReporter();
+void ordenarFila (Fila *fila);
+
+void reporter();
