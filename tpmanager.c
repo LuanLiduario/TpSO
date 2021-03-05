@@ -380,28 +380,6 @@ CPU escalonar(CPU cpu){
 	return cpu;
 }
 
-char * converterInt (char * string ,int n)
-{
-    int i =0, c,j;
-    while (n > 0) {
-        c = n % 10;
-        string[i] = c + '0';
-        n /= 10;
-        i++;
-    }
-   j = strlen(string) - 1;
-   i = 0;
-   char aux;
-   while (i < j) {
-      aux = string[i];
-      string[i] = string[j];
-      string[j] = aux;
-      i++;
-      j--;
-   }
-    return string;
-}
-
 void reporter(){
 	int writepipeReporter[2] = {-1, -1};
     pid_t id_filho;
@@ -459,6 +437,7 @@ void reporter(){
 				//ATRIBUTOS DO PROCESSO BLOQUEADO
 				comando = 'S';
 	        	write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
+	        	sleep(1);//ver dps
 			 	write (writepipeReporter[1], &processo.id_processo,sizeof(int));
 				write (writepipeReporter[1], &processo.id_processo_pai,sizeof(int));
  				write (writepipeReporter[1], &processo.prioridade,sizeof(int));
@@ -483,26 +462,19 @@ void reporter(){
 				processo = aux->referenceTabelaPcb->tabelaPcb;
 				//ATRIBUTOS DO PROCESSO BLOQUEADO
 				comando = 'S';
-	        	close (writepipeReporter[0]);
 	        	write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
-	       		close (writepipeReporter[0]);
+	        	sleep(1);//ver dps
 			 	write (writepipeReporter[1], &processo.id_processo,sizeof(int));
-			 	close (writepipeReporter[0]);
 				write (writepipeReporter[1], &processo.id_processo_pai,sizeof(int));
-				close (writepipeReporter[0]);
  				write (writepipeReporter[1], &processo.prioridade,sizeof(int));
- 				close (writepipeReporter[0]);
 				write (writepipeReporter[1], &processo.valor_inteiro,sizeof(int));
-				close (writepipeReporter[0]);
  				write (writepipeReporter[1], &processo.tempo_inicio,sizeof(int));
- 				close (writepipeReporter[0]);
  				write (writepipeReporter[1], &processo.tempo_cpu_utilizada,sizeof(int));
 				aux = aux->prox;
 			}
         }
         //FINALIZAR:
         comando = 'F';
-        close (writepipeReporter[0]);
         write (writepipeReporter[1], &comando, 1);
     }
     wait(0);
