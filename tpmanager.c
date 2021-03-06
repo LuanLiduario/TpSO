@@ -70,7 +70,7 @@ int main() {//PM
 ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont, int nintrucoes){
 	// atribui os dados a uma variavel ques será salva na lista
 	TabelaPcb processo;
-	processo.id_processo = id;
+	processo.id_processo = id;//trocar
     processo.id_processo_pai = id_pai;
 	processo.cont_programa = cont;
 	processo.valor_inteiro = valor;
@@ -209,12 +209,9 @@ CPU processoSimulado(CPU cpu)
 			ListaTabelaPcb *aux;
 			aux = addTabelaPCB(cpu.programa,nProcessos,estado_executando->tabelaPcb.id_processo,cpu.valor_inteiro,cpu.cont_programa,cpu.nintrucoes);
 			estado_pronto = addFila(estado_pronto,aux);//ordenar
-			//ordenarFila(estado_pronto);
-			// if(cpu.programa[cpu.cont_programa].instrucao == 'R'){
-				// printf("SOMA %d ", cpu.cont_programa);
-				cpu.cont_programa =  cpu.cont_programa + cpu.programa[cpu.cont_programa-1].valor;
-				// printf("+ %d = %d\n",cpu.programa[cpu.cont_programa-1].valor, cpu.cont_programa);
-			// }
+			ordenarFila(estado_pronto);
+			printf("to ak\n");
+			cpu.cont_programa =  cpu.cont_programa + cpu.programa[cpu.cont_programa-1].valor;
 			break;
 		case 'R':// R nome do arquivo: Substitui o programa do processo simulado com o programa no arquivo nome do
 		// arquivo, e atualiza o valor do contador de programa para a primeira instrução do novo programa.
@@ -239,6 +236,7 @@ Fila* addFila(Fila *fila,ListaTabelaPcb *processo){
 		fila = (Fila*) malloc(sizeof(Fila));
 		fila->referenceTabelaPcb = processo;
 		fila->prox = NULL;
+		fila->anterior = NULL;
 	}else{
 		Fila *aux = fila;
 		while(aux->prox != NULL){// sempre inserir no FIM
@@ -247,6 +245,7 @@ Fila* addFila(Fila *fila,ListaTabelaPcb *processo){
 		aux->prox = (Fila*) malloc(sizeof(Fila));
 		aux->prox->referenceTabelaPcb = processo;
 		aux->prox->prox = NULL;
+		aux->prox->anterior = aux;
 	}
 	return fila;
 }
@@ -259,6 +258,7 @@ Fila* retirarFila(Fila *fila){
 		fila = NULL;
 	}else{
 		Fila *aux = fila;
+		fila->prox->anterior = NULL;
 		fila = fila->prox;
 		free(aux);
 	}
@@ -276,32 +276,42 @@ void desbloquerProcesso(){
 		return;
 	}
 	estado_pronto = addFila(estado_pronto,estado_bloqueado->referenceTabelaPcb);//ordenar fila
+	ordenarFila(estado_pronto);
+	printf("SAIU DA ORDENACAO\n");
 	//ordenarFila(estado_pronto);
 	estado_bloqueado->referenceTabelaPcb->tabelaPcb.estado = 3;
 	estado_bloqueado = retirarFila(estado_bloqueado);
 }
 
 void ordenarFila (Fila *fila){//insert sort
-	Fila *percorre = fila->prox;
-	//int i = 1;
-	while(percorre != 0)
-	{
-
+	printf("ENTROU NA ORDENACAO\n");
+	if(fila == NULL){
+		return;
 	}
-	Fila aux;
-	int i;
-	int j = 1;
-	while(percorre != NULL){
-		aux = fila[j];
-		for (i = j-1; i >= 0 && 
-			fila[i].referenceTabelaPcb->tabelaPcb.prioridade > aux.referenceTabelaPcb->tabelaPcb.prioridade; --i){//analisa a posiçao anterior a que se está no vetor, se o anterior for maior os dois trocam de lugar e o i é decrementado
-			fila[i+1] = fila[i];
+	if(fila->prox == NULL){
+		return;
+	}
+	Fila *atual = fila->prox;//Começa a percorrer a fila da segunda posição
+	Fila *anterior = NULL;
+	ListaTabelaPcb *aux;// a cada troca necessária, será trocado a referencia da tabeça pcb
+	while(atual != NULL)
+	{//percorre a lista toda
+		aux = atual->referenceTabelaPcb;
+		anterior = atual->anterior;
+		while(anterior != NULL && anterior->referenceTabelaPcb->tabelaPcb.prioridade < aux->tabelaPcb.prioridade)
+		{//verifica se há necessidade de fazer trocas
+			anterior->prox->referenceTabelaPcb = anterior->referenceTabelaPcb;
+			anterior = anterior->anterior;
 		}
-		fila[i+1] = aux;
-		percorre = percorre->prox;
-		j++;
+		if(anterior == NULL){// Se anterior for null, a primeira posição da fila deve receber aux
+			fila->referenceTabelaPcb = aux;
+		}else{
+			anterior->prox->referenceTabelaPcb = aux;
+		}
+		atual = atual->prox;
 	}
 }
+
 
 // void insercaoVetorPequeno (int t, Pequeno *vetor){
 //    long int mov=0,comparacao=0;
@@ -340,6 +350,7 @@ CPU trocaContexto(CPU cpu)
     {//existe processo prontos
     	estado_executando = estado_pronto->referenceTabelaPcb;//o primeiro da fila de prontos sera o novo executando
     	estado_pronto = retirarFila(estado_pronto);//retiro o primeiro da fila de executando
+    	ordenarFila(estado_pronto);
 	    //Troca processo na CPU
 	    cpu.nintrucoes = estado_executando->tabelaPcb.nintrucoes;
 		cpu.cont_programa = estado_executando->tabelaPcb.cont_programa;
@@ -408,42 +419,42 @@ void reporter(){
         write (writepipeReporter[1],&TEMPO,sizeof(int));// variavel TEMPO
         //EXECUTANDO:
         comando = 'E';
-        write(writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR EXECUTANDO
+        write(writepipeReporter[1],&comando,sizeof(char));//comando PARA IMPRIMIR EXECUTANDO
         if(estado_executando == NULL){
         	comando = 'V';
-        	write(writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR SEM PROCESSO
+        	write(writepipeReporter[1],&comando,sizeof(char));//comando PARA IMPRIMIR SEM PROCESSO
         }else{
 	        //ATRIBUTOS DO PROCESSO EXECUTANDO
 	      //  printTabelaPCB();
 	        comando = 'S';
-	        write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
-	        sleep(1);//ver dps
-	        write(writepipeReporter[1], &estado_executando->tabelaPcb.id_processo,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.id_processo_pai,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.prioridade,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.valor_inteiro,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.tempo_inicio,sizeof(int));
-			write(writepipeReporter[1], &estado_executando->tabelaPcb.tempo_cpu_utilizada,sizeof(int));
+	        write (writepipeReporter[1],&comando,sizeof(char));//comando PARA PROCESSO
+	        //sleep(1);//ver dps
+	        write(writepipeReporter[1],&estado_executando->tabelaPcb.id_processo,sizeof(int));
+			write(writepipeReporter[1],&estado_executando->tabelaPcb.id_processo_pai,sizeof(int));
+			write(writepipeReporter[1],&estado_executando->tabelaPcb.prioridade,sizeof(int));
+			write(writepipeReporter[1],&estado_executando->tabelaPcb.valor_inteiro,sizeof(int));
+			write(writepipeReporter[1],&estado_executando->tabelaPcb.tempo_inicio,sizeof(int));
+			write(writepipeReporter[1],&estado_executando->tabelaPcb.tempo_cpu_utilizada,sizeof(int));
 		}
         comando = 'B';
-        write (writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR BLOQUEADO
+        write(writepipeReporter[1], &comando,sizeof(char));//comando PARA IMPRIMIR BLOQUEADO
         if(estado_bloqueado == NULL){
         	comando = 'V';
-        	write (writepipeReporter[1], &comando, 1);//comando PARA IMPRIMIR SEM PROCESSO
+        	write(writepipeReporter[1], &comando,sizeof(char));//comando PARA IMPRIMIR SEM PROCESSO
         }else{
         	aux = estado_bloqueado;
 			while(aux != NULL){// PERCORRER FILA DE BLOQUEADOS
 				processo = aux->referenceTabelaPcb->tabelaPcb;
 				//ATRIBUTOS DO PROCESSO BLOQUEADO
 				comando = 'S';
-	        	write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
-	        	sleep(1);//ver dps
-			 	write (writepipeReporter[1], &processo.id_processo,sizeof(int));
-				write (writepipeReporter[1], &processo.id_processo_pai,sizeof(int));
- 				write (writepipeReporter[1], &processo.prioridade,sizeof(int));
-				write (writepipeReporter[1], &processo.valor_inteiro,sizeof(int));
- 				write (writepipeReporter[1], &processo.tempo_inicio,sizeof(int));
- 				write (writepipeReporter[1], &processo.tempo_cpu_utilizada,sizeof(int));
+	        	write (writepipeReporter[1],&comando, 1);//comando PARA PROCESSO
+	        	//sleep(1);//ver dps
+			 	write (writepipeReporter[1],&processo.id_processo,sizeof(int));
+				write (writepipeReporter[1],&processo.id_processo_pai,sizeof(int));
+ 				write (writepipeReporter[1],&processo.prioridade,sizeof(int));
+				write (writepipeReporter[1],&processo.valor_inteiro,sizeof(int));
+ 				write (writepipeReporter[1],&processo.tempo_inicio,sizeof(int));
+ 				write (writepipeReporter[1],&processo.tempo_cpu_utilizada,sizeof(int));
 				aux = aux->prox;
 			}
         }
@@ -462,14 +473,14 @@ void reporter(){
 				processo = aux->referenceTabelaPcb->tabelaPcb;
 				//ATRIBUTOS DO PROCESSO BLOQUEADO
 				comando = 'S';
-	        	write (writepipeReporter[1], &comando, 1);//comando PARA PROCESSO
-	        	sleep(1);//ver dps
-			 	write (writepipeReporter[1], &processo.id_processo,sizeof(int));
-				write (writepipeReporter[1], &processo.id_processo_pai,sizeof(int));
- 				write (writepipeReporter[1], &processo.prioridade,sizeof(int));
-				write (writepipeReporter[1], &processo.valor_inteiro,sizeof(int));
- 				write (writepipeReporter[1], &processo.tempo_inicio,sizeof(int));
- 				write (writepipeReporter[1], &processo.tempo_cpu_utilizada,sizeof(int));
+	        	write (writepipeReporter[1],&comando,sizeof(char));//comando PARA PROCESSO
+	        	//sleep(1);//ver dps
+			 	write (writepipeReporter[1],&processo.id_processo,sizeof(int));
+				write (writepipeReporter[1],&processo.id_processo_pai,sizeof(int));
+ 				write (writepipeReporter[1],&processo.prioridade,sizeof(int));
+				write (writepipeReporter[1],&processo.valor_inteiro,sizeof(int));
+ 				write (writepipeReporter[1],&processo.tempo_inicio,sizeof(int));
+ 				write (writepipeReporter[1],&processo.tempo_cpu_utilizada,sizeof(int));
 				aux = aux->prox;
 			}
         }
