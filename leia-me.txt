@@ -1,2 +1,4 @@
 Abra a pasta dos códigos com o terminal e digite o comando "make" para compilar.
-Depois digite ./main -i "nomeArquivoDeEntrada".txt -o "nomeArquivoDeSaída".txt para executar o código.
+Depois digite :
+Se quiser utilizar teclado como entrada de comandos : ./commander
+Se quiser utilizar um arquivo de texto como entrada de comandos : ./commander < nomeArquivoDeEntrada".txt

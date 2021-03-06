@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 void imprimirLinha()
-{
+{//imprimi uma 100 *
 	for (int i = 0; i <= 100; i++)
 	{
 		printf("*");
@@ -12,17 +12,20 @@ void imprimirLinha()
 }
 
 
-int main() {
+int main() 
+{
 	char comando;
 	int inteiro,id,pid,prioridade,valor,tempoInicio,tempoCPU;
 	printf("\n");
 	imprimirLinha();
 	printf("ESTADO DO SISTEMA\n");
 	imprimirLinha();
-	read(0, &inteiro, sizeof(int));
+	//primeiro interiro lido é o TEMPO do sistema
+	read(0,&inteiro,sizeof(int));
 	printf("\nTEMPO ATUAL: %d\n",inteiro);
 	do{
-		scanf("%c", &comando);
+		//le os comandos para saber quais operações deve realizar
+		read(0,&comando,sizeof(char));
 		//Comandos
 		switch(comando){
 			case 'E':
@@ -38,12 +41,12 @@ int main() {
 				printf("SEM PROCESSO\n");
 				break;
 			case 'S': //simuladado
-				read(0, &id, sizeof(int));
-				read(0, &pid, sizeof(int));
-				read(0, &prioridade, sizeof(int));
-				read(0, &valor, sizeof(int));
-				read(0, &tempoInicio, sizeof(int));
-				read(0, &tempoCPU, sizeof(int));
+				read(0,&id,sizeof(int));
+				read(0,&pid,sizeof(int));
+				read(0,&prioridade,sizeof(int));
+				read(0,&valor,sizeof(int));
+				read(0,&tempoInicio,sizeof(int));
+				read(0,&tempoCPU,sizeof(int));
 				printf("pid : %d",id);
 				printf(", ppid : %d",pid);
 				printf(", prioridade: %d",prioridade);
@@ -53,6 +56,8 @@ int main() {
 				break;
 			case 'F':
 				imprimirLinha();
+				break;
+			default:
 				break;
 		}
 	}while(comando != 'F');
