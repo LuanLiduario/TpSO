@@ -24,10 +24,10 @@ int main() {
 
     } else {
         char string;
+        close(writepipe[0]);
         while(string != 'T'){
         //  printf("commander\n");
           scanf("%c", &string);
-          close(writepipe[0]);
           write(writepipe[1], &string, 1);
           sleep(1);
         }

@@ -9,6 +9,7 @@
 #define prioridadeMIN 1
 #define quantum 5
 #define TamanhoString 50
+#define prioridadeMAX 10
 
 typedef struct {
 	int valor;// trocar nome
@@ -17,20 +18,20 @@ typedef struct {
 }Instrucao;
 // Tempo é um inteiro inicializado com 0
 int TEMPO = 0;
-int TEMPOMEDIO = 0;
 //CPU é usado para simular a execução de um processo simulado que está no estado executando
 typedef struct{
     int cont_programa;
     int valor_inteiro;
     int tempo_processo;
     int tempo_atual;
-    int nintrucoes;//trocar nome
+    int nInstrucoes;
+    int prioridade;
     Instrucao *programa;
 }CPU;
 //TabelaPcb é um array com uma entrada para cada processo que ainda não terminou sua execução.
 typedef struct{
     int prioridade;
-    int nintrucoes;//trocar nome
+    int nInstrucoes;
 	int id_processo_pai;
 	int id_processo;
 	int cont_programa;////// contrario
@@ -49,23 +50,23 @@ typedef struct ListaTabelaPcb{
 
 ListaTabelaPcb *tabelaPcb = NULL;
 
-//TabelaPcb tabelaPcb[100];// arrumar
 int nProcessos = 0;// trocar nome
 //Fila para estados
 typedef struct fila{
     ListaTabelaPcb *referenceTabelaPcb;
 	struct fila *prox;
+    struct fila *anterior;
 } Fila;
 
 //Estado Pronto 
-Fila *estado_pronto = NULL;//trocar nome
+Fila *fila_prontos = NULL;//trocar nome
 //Estado Bloqueado 
-Fila *estado_bloqueado = NULL;//trocar nome
+Fila *fila_bloqueados = NULL;//trocar nome
 //Estado Executando 
-ListaTabelaPcb *estado_executando = NULL;//N
+ListaTabelaPcb *executando = NULL;//N
 
-Instrucao* lerArq(char * filename,int *nintrucoes);
-ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont, int nintrucoes);
+Instrucao* lerArq(char * filename,int *nInstrucoes);
+ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont, int nInstrucoes);
 
 // ListaTabelaPcb* addTabelaPCB(Instrucao * programa,int id,int id_pai, int valor,int cont);
 
@@ -81,13 +82,12 @@ CPU trocaContexto(CPU cpu);
 // void processoReporter();
 
 //Funcoes testes
-void printFILA(Fila *fila);
-void printTabelaPCB();
 void imprimaCpu(Instrucao *intrucao);
-void imprimirLinha();
 //
 CPU escalonar();
-void processoReporter();
+
 void ordenarFila (Fila *fila);
 
 void reporter();
+
+int definirPrioridade(int prioridade);
